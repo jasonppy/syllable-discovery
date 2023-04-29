@@ -10,9 +10,9 @@ The codebase for the advanced CV course project
 5. [Training](#5-training)
 
 ## 1. Environment
-It is recommended to create a new conda environment for this project with `conda create -n wd python=3.9`, the requirement on python version is not rigid, as long as you can install the packages listed in `./requirements.txt`. The requirement for the versions of the packages is not rigid either, while the listed versions were tested, higher/lower versions might also work.
+It is recommended to create a new conda environment for this project with `conda create -n sd python=3.9`, the requirement on python version is not rigid, as long as you can install the packages listed in `./requirements.txt`. The requirement for the versions of the packages is not rigid either, while the listed versions were tested, higher/lower versions might also work.
 
-If you want to get the attention weights of different attention head (**which is required for all word and boundary detection experiments**), you need to modify the output of the `multi_head_attention_forward` function in the PyTorch package at`torch/nn/functional`. if you install pytorch using conda in environment `wd`, the path of the file should be `path_to_conda/envs/wd/lib/python3.9/site-packages/torch/nn/functional.py`. get to function `multi_head_attention_forward`, and change the output as the following
+If you want to get the attention weights of different attention head (**which is required for all word and boundary detection experiments**), you need to modify the output of the `multi_head_attention_forward` function in the PyTorch package at`torch/nn/functional`. if you install pytorch using conda in environment `sd`, the path of the file should be `path_to_conda/envs/sd/lib/python3.9/site-packages/torch/nn/functional.py`. get to function `multi_head_attention_forward`, and change the output as the following
 
 ```python
     # if need_weights:
@@ -74,14 +74,8 @@ from models import audio_encoder
 import numpy as np
 from mincut import mincut
 
-def mincut_wrapper(audio_len_sec, ali, feat, spf, attn_weights, segment_method):
-    if args.secPerSyllable >= 10000: # probably the best guess of num_sullables, actually n_syl + n_sil blocks
-        n_sil = [True for l,r in zip(ali[:-1], ali[1:]) if r[0] - l[1] >= 0.02] # if two syllables are further than 0.02, then there is a silence block
-        n_sil.append(True if ali[0][0] >= 0.02 else False)
-        n_sil = sum(n_sil)
-        num_syllable = len(ali) + n_sil
-    else:
-        num_syllable = int(np.ceil(audio_len_sec / args.secPerSyllable)) if args.secPerSyllable > 0 else len(ali) - int(args.secPerSyllable) # if negative number, means number of ground truth - that number
+def mincut_wrapper(audio_len_sec, feat, spf, attn_weights, segment_method):
+    num_syllable = int(np.ceil(audio_len_sec / args.secPerSyllable))
 
     ssm = feat@feat.transpose(1,0)
     ssm = ssm - np.min(ssm) + 1e-7 # make it non-negative
@@ -141,9 +135,7 @@ attn_weights = attn_weights.sum(0).cpu().float().numpy() # [T]
 
 spf = audio.shape[0]/sr/feat.shape[0]
 
-ali = get_word_ali(raw_ali)
-temp_data_dict[wav_fn] = {"feat": feat, "attn_weight": attn_weights, "audio_len_sec": (audio.shape[0]/sr), "spf": spf, "ali": ali}
-pooled_feat, boundaries = mincut_wrapper(audio_len_sec=audio.shape[0]/sr, ali=None, feat=feat, spf=spf, attn_weights=attn_weights, segment_method=segment_method)
+pooled_feat, boundaries = mincut_wrapper(audio_len_sec=audio.shape[0]/sr, feat=feat, spf=spf, attn_weights=attn_weights, segment_method=segment_method)
 
 ```
 ## 3. Speech Segmentation and Syllable Detection on SpokenCOCO
