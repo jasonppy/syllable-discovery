@@ -53,7 +53,7 @@ Note that since PyTorch 1.11, `multi_head_attention_forward` accepts argument `a
 ## 2. Apply VG-HuBERT on Syllable Level Speech Segmentation
 To enable quickly applying the VG-HuBERT on speech segmentation, we provide the following standalone script. You need to provide four arguments to make it run:
 
-1. `model_path`. It should be the directory the `.pth` and `args.pkl` are at. We open provide two trained models, [VG-HuBERT_3](https://www.cs.utexas.edu/~harwath/model_checkpoints/vg_hubert/vg-hubert_3.tar) and [VG-HuBERT_4](https://www.cs.utexas.edu/~harwath/model_checkpoints/vg_hubert/vg-hubert_4.tar). VG-HuBERT_3 should performance better on speech segmentation. Please untar the file after downloading.
+1. `model_path`. It should be the directory the `.pth` and `args.pkl` are at. We open provide two checkpoints of VG-HuBERT [VG-HuBERT_3](https://www.cs.utexas.edu/~harwath/model_checkpoints/vg_hubert/vg-hubert_3.tar) best_bundle.pth is better are syllable segmentation, snapshot_20.pth is better at word segmentation. See the paper for detailed results and discussion on the reasons.
 
 2. `wav_file`. The speech file you want to segment, we recommend the length of the speech to be 1 ~ 8 seconds, although in our experience the segmentation performance of VG-HuBERT is robust to the length of the input. the file should be [SoundFlie](https://pysoundfile.readthedocs.io/en/latest/) Readable, i.e. .wav, .flac etc.
 
