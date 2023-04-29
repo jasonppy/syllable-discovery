@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.vscode/
+.ipynb_checkpoints/
+*.png
+*.gif
+*.pdf
+test*
+*.log
+*.c
+*.so
+*.o
+build/
