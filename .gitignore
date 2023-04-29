@@ -12,3 +12,4 @@ test*
 *.so
 *.o
 build/
+debug.ipynb
