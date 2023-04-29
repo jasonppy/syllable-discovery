@@ -152,7 +152,7 @@ print("I am process %s, running on %s: starting (%s)" % (
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--exp_dir", type=str)
-parser.add_argument("--dataset", type=str, default='zs21')
+parser.add_argument("--dataset", type=str, default='zs20')
 parser.add_argument("--data_root", type=str, default="/data2/scratch/pyp/datasets/")
 parser.add_argument("--language", type=str,  default='english', choices=['english', 'french', 'LANG1', 'LANG2', 'mandarin'])
 parser.add_argument("--save_root", type=str, default="/data2/scratch/pyp/discovery/word_unit_discovery/")

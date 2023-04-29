@@ -8,6 +8,7 @@ print("\nI am process %s, running on %s: starting (%s)" % (
         os.getpid(), os.uname()[1], time.asctime()))
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--data_json", type=str, default="/data1/scratch/coco_pyp/SpokenCOCO/SpokenCOCO_val_unrolled_karpathy_with_alignments.json", help="the fn of force alignment json file")
+parser.add_argument("--save_root", type=str, default="/data2/scratch/pyp/exp_pyp")
 parser.add_argument("--language", type=str,  default='english', choices=['english', 'french', 'LANG1', 'LANG2', 'mandarin'])
 parser.add_argument("--exp_dir", type=str, default="/scratch/cluster/pyp/exp_pyp/discovery/word_unit_discovery/disc-23/curFeats_mean_0.9_7_forceAlign")
 parser.add_argument("--k", type=int, default=4096)
@@ -72,7 +73,7 @@ def prepare_data(exp_dir):
 
 code2seg = prepare_data(args.exp_dir)
 
-out_dir = "/data2/scratch/pyp/exp_pyp/zs2020_snapshot" + args.snapshot + "_insertThreshold" + str(args.insert_threshold if args.insert_threshold < 100 else int(args.insert_threshold)) + "/2017/track2"
+out_dir = os.path.join(args.save_root, "zs2020_snapshot" + args.snapshot + "_insertThreshold" + str(args.insert_threshold if args.insert_threshold < 100 else int(args.insert_threshold)) + "/2017/track2")
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir, exist_ok=True)
 with open(os.path.join(out_dir, f"{args.language}.txt"), "w") as f:

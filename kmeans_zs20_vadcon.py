@@ -13,7 +13,7 @@ print("I am process %s, running on %s: starting (%s)" % (
         os.getpid(), os.uname()[1], time.asctime()))
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--dataset", type=str, default='zs21')
+parser.add_argument("--dataset", type=str, default='zs20')
 parser.add_argument("--language", type=str,  default='english', choices=['english', 'french', 'LANG1', 'LANG2', 'mandarin'])
 parser.add_argument("--exp_dir", type=str, default="/data2/scratch/pyp/discovery/word_unit_discovery/disc-16",help="directory to dump experiments")
 parser.add_argument("--batch_size", type=int, default=40000)
