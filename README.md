@@ -6,7 +6,8 @@
 2. [Apply VG-HuBERT to Syllable Level Speech Segmentation](#2-apply-vg-huBERT-on-syllable-level-speech-segmentation)
 3. [Speech Segmentation and Syllable Detection on SpokenCOCO](#3-speech-segmentation-and-syllable-detection-on-spokencoco)
 4. [Apply VG-HuBERT to ZeroSpeech2020](#4-apply-vg-hubert-on-zerospeech2020)
-5. [Training](#5-training)
+5. [Apply VG-HuBERT to the Estonian Conversational Corpus](#5-apply-vg-hubert-to-the-estonian-conversational-corpus)
+6. [Training](#6-training)
 
 ## 1. Environment
 It is recommended to create a new conda environment for this project with `conda create -n sd python=3.9`, the requirement on python version is not rigid, as long as you can install the packages listed in `./requirements.txt`. The requirement for the versions of the packages is not rigid either, while the listed versions were tested, higher/lower versions might also work.
@@ -332,7 +333,29 @@ Results:
 
 ```
 
+## 5. Apply VG-HuBERT to the Estonian Conversational Corpus
+Please first obtain a signed agreement following [the official corpus website](https://datadoi.ee/bitstream/handle/33/351/ekskfk_info_eng.html?sequence=45)
 
+After that please download the data following instructions on the same website, and unzip and put the data in `/path/to/wav`. Contact me with the agreement and I'll send you the validation split, and preprocessed testing data. Please put the valid split at `/path/to/valid_pkl` and the testing data at `/path/to/test/data`. Change the corresponding path in `scripts/estonian_boundary.sh`
 
-## 5. Training
+To get the testing rest in the paper, run
+```bash
+cd ./scripts
+sps=0.15
+layer=8
+mergeThres=0.4
+bash estonian_boundary.sh vg-hubert_3 ${sps} ${layer} mean minCutMerge-${mergeThres} 1 best 32 estonian
+```
+
+results are the following
+```log
+shift: -0.01500000000000002
+prec: 0.7748138039886228
+rec:  0.7992825766184427
+os: 0.03158019707942539
+f1:  0.7868580110866227
+R val:  0.816277090533229
+```
+
+## 6. Training
 To train a VG-HuBERT model, check out the [codebase](https://github.com/jasonppy/word-discovery) for [the word discovery with VG-HuBERT paper](https://arxiv.org/pdf/2203.15081.pdf)
