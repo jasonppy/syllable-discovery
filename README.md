@@ -1,6 +1,5 @@
 # Syllable Segmentation and Cross-Lingual Generalization in a Visually Grounded, Self-Supervised Speech Model
 
-The codebase for the advanced CV course project
 
 # Table of Contents
 1. [Environment](#1-environment)
