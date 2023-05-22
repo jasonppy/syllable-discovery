@@ -19,8 +19,6 @@ parser.add_argument("--exp_dir", type=str, default="/data2/scratch/pyp/discovery
 parser.add_argument("--batch_size", type=int, default=40000)
 parser.add_argument("--resume", action="store_true", default=False)
 parser.add_argument("--max_iter", type=int, default=100)
-parser.add_argument("--feats_type", type=str, default="preFeats", choices=['preFeats', 'curFeats'])
-parser.add_argument("--percentage", type=int, default=None, help="if None, the feats_type is the original name, otherwise, it's feats_type_percentage")
 parser.add_argument("--threshold", type=float, default=0.90)
 parser.add_argument("--reduce_method", type=str, default="mean", choices=['mean', 'max', 'median', 'weightedmean'])
 parser.add_argument("--tgt_layer_for_attn", type=int, default=7, help="where attn weights are coming from, as for features, if feats_type==preFeats, and feature comes from previous layer of tgt_layer_for_attn, otherwise, feature comes from the same layer")
@@ -39,10 +37,8 @@ parser.add_argument("--insert_threshold", type=float, default=10000.0, help="if 
 
 args = parser.parse_args()
 
-feats_type = args.dataset + "_" + args.feats_type + "_" + args.reduce_method + "_" + str(args.threshold) + "_" + str(args.tgt_layer_for_attn) + "_" + args.segment_method + "_" + args.language + "_" + "snapshot"+args.snapshot + "_" + "insertThreshold" + str(args.insert_threshold if args.insert_threshold < 100 else int(args.insert_threshold))
+feats_type = args.dataset + "_" + args.reduce_method + "_" + str(args.threshold) + "_" + str(args.tgt_layer_for_attn) + "_" + args.segment_method + "_" + args.language + "_" + "snapshot"+args.snapshot + "_" + "insertThreshold" + str(args.insert_threshold if args.insert_threshold < 100 else int(args.insert_threshold))
 
-if args.percentage is not None:
-    feats_type = feats_type + "_" + str(args.percentage)
 exp_dir = osp.join(args.exp_dir, feats_type)
 if not os.path.isdir(exp_dir):
     raise RuntimeError(f"{exp_dir} does not exist!!")

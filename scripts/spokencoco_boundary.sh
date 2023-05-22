@@ -17,13 +17,10 @@ dataset=spokencoco
 # bash spokencoco_boundary.sh vg-hubert_3 ${sps} ${layer} mean minCutMerge-${mergeThres} 1 best 32
 
 
-# model_root=/path/to/root/of/model/parent_folder # i.e. the parent folder of folder vg-hubert_x
-# data_root=/path/to/coco/
-# save_root= # save intermediate data
+model_root=/path/to/root/of/model/parent_folder # i.e. the parent folder of folder vg-hubert_x
+data_root=/path/to/coco/
+save_root= # save intermediate data
 
-model_root=/data/scratch/pyp/exp_pyp/discovery # i.e. the parent folder of folder vg-hubert_x
-data_root=/data/scratch/pyp/datasets/coco_pyp
-save_root=/data/scratch/pyp/exp_pyp # save intermediate data
 
 
 data_json="${data_root}/SpokenCOCO/SpokenCOCO_test_unrolled_karpathy_with_alignments_new_adapt_syllable.json"
@@ -33,7 +30,7 @@ whole_feats_type="${dataset}_${segment_method}_secPerSyllable${secPerSyllable}_$
 
 
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate new_tf2
+conda activate new_sd
 python ../save_seg_feats_mincut.py \
 --secPerSyllable ${secPerSyllable} \
 --n_proc ${n_proc} \
@@ -49,7 +46,7 @@ python ../save_seg_feats_mincut.py \
 
 
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate new_tf2
+conda activate new_sd
 python ../unit_analysis_boundary_only.py \
 --level ${level} \
 --tolerance ${tol} \
