@@ -1,5 +1,12 @@
 # Syllable Segmentation and Cross-Lingual Generalization in a Visually Grounded, Self-Supervised Speech Model
-
+```
+@inproceedings{peng2023syllable,
+  title={Syllable Segmentation and Cross-Lingual Generalization in a Visually Grounded, Self-Supervised Speech Model},
+  author={Peng, Puyuan and Li, Shang-Wen and Räsänen, Okko and Mohamed, Abdelrahman and Harwath, David},
+  booktitle={Interspeech},
+  year={2023}
+}
+```
 
 # Table of Contents
 1. [Environment](#1-environment)
