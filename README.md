@@ -148,11 +148,8 @@ wget http://images.cocodataset.org/zips/val2014.zip -P {coco_root}
 ```
 Please untar/unzip the compressed files after downloading them
 
-Then download karpathy split json files with word alignment 
-```bash
-wget https://www.cs.utexas.edu/~harwath/model_checkpoints/vg_hubert/karpathy_json.tar -P ${coco_root}/SpokenCOCO/
-```
-Please also untar it. 
+Then download karpathy split json files with syllable alignment from the following link:
+[val](https://drive.google.com/file/d/1ZqszndqeiV8W8pV_7YVWIngmaza3cf9I/view?usp=drive_link), [test](https://drive.google.com/file/d/1e8dgwDWcHpB1Bf_q_T6v2JiKTD33f9Ts/view?usp=drive_link)
 
 Then you are all set, just run
 
