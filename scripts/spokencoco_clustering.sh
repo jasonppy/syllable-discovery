@@ -24,13 +24,10 @@ dataset=spokencoco # (lowercase) spokencoco, timit
 # mergeThres=0.3
 # bash spokencoco_clustering.sh vg-hubert_3 ${sps} ${layer} 16384 mean minCutMerge-${mergeThres} 1 best 32 1.1 0 classic 4096 cosine average -0.02
 
-# model_root=/path/to/root/of/model/parent_folder # i.e. the parent folder of folder vg-hubert_x
-# data_root=/path/to/coco/
-# save_root= # save intermediate data
+model_root=/path/to/root/of/model/parent_folder # i.e. the parent folder of folder vg-hubert_x
+data_root=/path/to/coco/
+save_root= # save intermediate data
 
-model_root=/data/scratch/pyp/exp_pyp/discovery # i.e. the parent folder of folder vg-hubert_x
-data_root=/data/scratch/pyp/datasets/coco_pyp
-save_root=/data/scratch/pyp/exp_pyp # save intermediate data
 
 
 data_json="${data_root}/SpokenCOCO/SpokenCOCO_test_unrolled_karpathy_with_alignments_new_adapt_syllable_multisyllabic.json"
@@ -41,7 +38,7 @@ whole_feats_type="${dataset}_${segment_method}_secPerSyllable${secPerSyllable}_$
 
 
 # source ~/miniconda3/etc/profile.d/conda.sh
-# conda activate new_tf2
+# conda activate new_sd
 # python ../save_seg_feats_mincut.py \
 # --secPerSyllable ${secPerSyllable} \
 # --n_proc ${n_proc} \
@@ -55,7 +52,7 @@ whole_feats_type="${dataset}_${segment_method}_secPerSyllable${secPerSyllable}_$
 # --data_json ${data_json}
 
 # source ~/miniconda3/etc/profile.d/conda.sh
-# conda activate new_tf2
+# conda activate new_sd
 # python ../kmeans_agglomerative.py \
 # --data_dict_root ${save_root}/${whole_feats_type} \
 # --wav_root "${data_root}/SpokenCOCO" \
@@ -72,7 +69,7 @@ whole_feats_type="${dataset}_${segment_method}_secPerSyllable${secPerSyllable}_$
 
 
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate new_tf2
+conda activate new_sd
 python ../unit_analysis_mwm.py \
 --shift ${shift} \
 --tolerance 0.05 \

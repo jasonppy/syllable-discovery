@@ -14,7 +14,7 @@ from itertools import groupby
 from operator import itemgetter
 import csv
 from collections import defaultdict
-def cls_attn_seg_feats(feats, cls_attn_weights, threshold, pool, spf, level2, vad, insert_threshold, start_sec):
+def cls_attn_seg_feats(feats, cls_attn_weights, threshold, pool, spf, vad, insert_threshold, start_sec):
     # return a list of features that are segmented by cls attn weights
     threshold_value = torch.quantile(cls_attn_weights, threshold, dim=-1, keepdim=True) # [n_h, T]
     cls_attn_weights_sum = cls_attn_weights.sum(0)
@@ -31,7 +31,7 @@ def cls_attn_seg_feats(feats, cls_attn_weights, threshold, pool, spf, level2, va
         else:
             boundaries_all.append([t_s, t_e])
     
-    if level2 or len(boundaries_ex1) == 0:
+    if len(boundaries_ex1) == 0:
         boundaries = boundaries_all
     else:
         boundaries = boundaries_ex1
@@ -156,12 +156,9 @@ parser.add_argument("--dataset", type=str, default='zs20')
 parser.add_argument("--data_root", type=str, default="/data2/scratch/pyp/datasets/")
 parser.add_argument("--language", type=str,  default='english', choices=['english', 'french', 'LANG1', 'LANG2', 'mandarin'])
 parser.add_argument("--save_root", type=str, default="/data2/scratch/pyp/discovery/word_unit_discovery/")
-parser.add_argument("--feats_type", type=str, default="preFeats", choices=['preFeats', 'curFeats'])
-parser.add_argument("--percentage", type=int, default=None, help="if None, the feats_type is the original name, otherwise, it's feats_type_percentage")
 parser.add_argument("--threshold", type=float, default=0.90)
 parser.add_argument("--reduce_method", type=str, default="mean", choices=['mean', 'max', 'median', 'weightedmean'])
 parser.add_argument("--tgt_layer_for_attn", type=int, default=7, help="where attn weights are coming from, as for features, if feats_type==preFeats, and feature comes from previous layer of tgt_layer_for_attn, otherwise, feature comes from the same layer")
-parser.add_argument("--level2", action="store_true", default=False, help="if True, use feats and atten weights from level2 (not avaliable for models that only has one level of w2v2)")
 parser.add_argument("--segment_method", type=str, choices=['clsAttn', 'forceAlign'], default=None, help="if use cls attn segmentation or use force alignment segmentation. If use, need model_args.use_audio_cls_token to be True")
 parser.add_argument("--snapshot", type=str, default='best', help='which model snapshot to use, best means best_boundle.pth, can also pass number x, say 24, then will take snapshot_24.pth')
 parser.add_argument("--insert_threshold", type=float, default=10000.0, help="if the gap between two attention segments are above the threshold, we insert a two frame segment in the middle")
@@ -169,10 +166,8 @@ parser.add_argument("--insert_threshold", type=float, default=10000.0, help="if 
 args = parser.parse_args()
 
 save_root = os.path.join(args.save_root, args.exp_dir.split("/")[-1])
-feats_type = args.dataset + "_" + args.feats_type + "_" + args.reduce_method + "_" + str(args.threshold) + "_" + str(args.tgt_layer_for_attn) + "_" + args.segment_method + "_" + args.language + "_" + "snapshot"+args.snapshot + "_" + "insertThreshold" + str(args.insert_threshold if args.insert_threshold < 100 else int(args.insert_threshold))
+feats_type = args.dataset + "_" + args.reduce_method + "_" + str(args.threshold) + "_" + str(args.tgt_layer_for_attn) + "_" + args.segment_method + "_" + args.language + "_" + "snapshot"+args.snapshot + "_" + "insertThreshold" + str(args.insert_threshold if args.insert_threshold < 100 else int(args.insert_threshold))
 
-if args.percentage is not None:
-    feats_type = feats_type + "_" + str(args.percentage)
 save_root = os.path.join(save_root, feats_type)
 print("data save at: ", save_root)
 os.makedirs(save_root, exist_ok=True)
@@ -209,11 +204,10 @@ j = 0
 # total_data = []
 data_dict = {}
 missing_ali = 0
-level2 = False
 tgt_layer = args.tgt_layer_for_attn
 all_data = defaultdict(list)
 ######################
-vad_fn = os.path.join(args.data_root,f"vads/{args.language.upper()}_VAD.pkl")
+vad_fn = os.path.join(args.data_root,f"vads/{args.language.upper()}_VAD.csv")
 with open(vad_fn, "r") as f:
     reader = csv.reader(f, delimiter="\t")
     header = next(reader)
@@ -254,7 +248,7 @@ for key in tqdm.tqdm(all_data.keys()):
             print(f"VAD is longer than the actual audio for {key}")
             break
         with torch.no_grad():
-            w2v2_out = model(audio_use, padding_mask=None, mask=False, need_attention_weights=True, tgt_layer=tgt_layer, pre_feats=True if feats_type == "preFeats" else False, level2=level2)
+            w2v2_out = model(audio_use, padding_mask=None, mask=False, need_attention_weights=True, tgt_layer=tgt_layer, pre_feats=False)
 
         if args.segment_method == "clsAttn": # use cls attn for segmentation
             assert model_args.use_audio_cls_token and model_args.cls_coarse_matching_weight > 0.
@@ -262,7 +256,7 @@ for key in tqdm.tqdm(all_data.keys()):
             spf = audio_use.shape[-1]/sr/feats.shape[-2]
             attn_weights = w2v2_out['attn_weights'].squeeze(0) # [1, num_heads, tgt_len, src_len] -> [num_heads, tgt_len, src_len]
             cls_attn_weights = attn_weights[:, 0, 1:] # [num_heads, tgt_len, src_len] -> [n_h, T]
-            out = cls_attn_seg_feats(feats, cls_attn_weights, args.threshold, args.reduce_method, spf, level2, cur_vad, args.insert_threshold, start_sec)
+            out = cls_attn_seg_feats(feats, cls_attn_weights, args.threshold, args.reduce_method, spf, cur_vad, args.insert_threshold, start_sec)
         else:
             raise NotImplementedError(f"doesn't support {args.segment_method}")
         

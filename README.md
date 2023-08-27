@@ -1,5 +1,12 @@
 # Syllable Segmentation and Cross-Lingual Generalization in a Visually Grounded, Self-Supervised Speech Model
-
+```
+@inproceedings{peng2023syllable,
+  title={Syllable Segmentation and Cross-Lingual Generalization in a Visually Grounded, Self-Supervised Speech Model},
+  author={Peng, Puyuan and Li, Shang-Wen and Räsänen, Okko and Mohamed, Abdelrahman and Harwath, David},
+  booktitle={Interspeech},
+  year={2023}
+}
+```
 
 # Table of Contents
 1. [Environment](#1-environment)
@@ -12,7 +19,9 @@
 ## 1. Environment
 It is recommended to create a new conda environment for this project with `conda create -n sd python=3.9`, the requirement on python version is not rigid, as long as you can install the packages listed in `./requirements.txt`. The requirement for the versions of the packages is not rigid either, while the listed versions were tested, higher/lower versions might also work.
 
-If you want to get the attention weights of different attention head (**which is required for all word and boundary detection experiments**), you need to modify the output of the `multi_head_attention_forward` function in the PyTorch package at`torch/nn/functional`. if you install pytorch using conda in environment `sd`, the path of the file should be `path_to_conda/envs/sd/lib/python3.9/site-packages/torch/nn/functional.py`. get to function `multi_head_attention_forward`, and change the output as the following
+Then go to `./mincut` directory, and run `python setup.py build_ext --inplace` which will build Cython based mincut algorithm.
+
+If you want to get the attention weights of different attention head (**which is required for all word segmentation and discovery experiments**), you need to modify the output of the `multi_head_attention_forward` function in the PyTorch package at`torch/nn/functional`. if you install pytorch using conda in environment `sd`, the path of the file should be `path_to_conda/envs/sd/lib/python3.9/site-packages/torch/nn/functional.py`. get to function `multi_head_attention_forward`, and change the output as the following
 
 ```python
     # if need_weights:
@@ -57,25 +66,25 @@ To enable quickly applying the VG-HuBERT on speech segmentation, we provide the 
 
 2. `wav_file`. The speech file you want to segment, we recommend the length of the speech to be 1 ~ 8 seconds, although in our experience the segmentation performance of VG-HuBERT is robust to the length of the input. the file should be [SoundFlie](https://pysoundfile.readthedocs.io/en/latest/) Readable, i.e. .wav, .flac etc.
 
-3. `tgt_layer`, `segment_method` and `secPerSyllable`. `tgt_layer` is the layer from which you want to get the feature self-similarity matrix from, `segment_method` can be `minCut` or `minCutMerge-${mergeThres}`, we recommend setting mergeThres to be 0.3, 0.35, or 0.4. And 0.3 works the best for English. Consider secPerSyllable to be 0.15 or 0.2 (0.2 works the best for English)
+3. `tgt_layer`, `segment_method` and `secPerSyllable`. `tgt_layer` is the layer from which you want to get the feature self-similarity matrix from, this is 0-based (i.e. the first transformer layer is layer 0), and we recommend layer 8,`segment_method` can be `minCut` or `minCutMerge-${mergeThres}`, we recommend setting mergeThres to be 0.3, 0.35, or 0.4. And 0.3 works the best for English. Consider secPerSyllable to be 0.15 or 0.2 (0.2 works the best for English)
 
 ```python
-model_path = # TODO
-wav_file = # TODO
-tgt_layer = # TODO
-segment_method = # TODO
-secPerSyllable = # TODO
+model_path = # TODO path to the folder that contains args.pkl and best_bundle.pth
+wav_file = # TODO 
+tgt_layer = # TODO recommend 8
+segment_method = # TODO minCut or minCutMerge-${mergeThres}, with mergeThres being 0.3, 0.35, or 0.4
+secPerSyllable = # TODO 0.15 or 0.2
 
 
 
-import torch
+import torch, os
 import soundfile as sf
 from models import audio_encoder
 import numpy as np
 from mincut import mincut
 
-def mincut_wrapper(audio_len_sec, feat, spf, attn_weights, segment_method):
-    num_syllable = int(np.ceil(audio_len_sec / args.secPerSyllable))
+def mincut_wrapper(audio_len_sec, feat, spf):
+    num_syllable = int(np.ceil(audio_len_sec / secPerSyllable))
 
     ssm = feat@feat.transpose(1,0)
     ssm = ssm - np.min(ssm) + 1e-7 # make it non-negative
@@ -101,15 +110,8 @@ def mincut_wrapper(audio_len_sec, feat, spf, attn_weights, segment_method):
             min_id = np.argmax(all_sim)
 
     boundaries = [[l*spf,r*spf] for l, r in seg_boundary_frame_pairs]
-    if args.reduce_method == "mean":
-        feat = [torch.from_numpy(feat[round(l):round(r)].mean(0)) for l,r in seg_boundary_frame_pairs]
-    elif args.reduce_method == "median":
-        feat = [torch.from_numpy(feat[min(round(l+r/2), len(feat)-1)]) for l,r in seg_boundary_frame_pairs]
-    elif args.reduce_method == "max":
-        feat = [torch.from_numpy(feat[l+np.argmax(attn_weights[l:r])]) for l,r in seg_boundary_frame_pairs]
-    else:
-        raise NotImplementedError
-
+    feat = [torch.from_numpy(feat[round(l):round(r)].mean(0)) for l,r in seg_boundary_frame_pairs]
+    
     return feat, boundaries
 
 # setup model
@@ -128,14 +130,11 @@ audio_len_in_sec = len(audio) / sr
 audio = torch.from_numpy(audio).unsqueeze(0).cuda() # [T] -> [1, T]
 
 # model forward
-out = model(torch.from_numpy(audio).unsqueeze(0).cuda(), padding_mask=None, mask=False, tgt_layer=args.layer, need_attention_weights=True, pre_feats= False)
+out = model(torch.from_numpy(audio).unsqueeze(0).cuda(), padding_mask=None, mask=False, tgt_layer=layer, need_attention_weights=True, pre_feats= False)
+
 feat = out['features'].squeeze(0)[1:].cpu().float().numpy()
-attn_weights = out['attn_weights'].squeeze(0)[:, 0, 1:] # [num_heads, tgt_len, src_len] -> [n_h, T]
-attn_weights = attn_weights.sum(0).cpu().float().numpy() # [T]
-
 spf = audio.shape[0]/sr/feat.shape[0]
-
-pooled_feat, boundaries = mincut_wrapper(audio_len_sec=audio.shape[0]/sr, feat=feat, spf=spf, attn_weights=attn_weights, segment_method=segment_method)
+pooled_feat, boundaries = mincut_wrapper(audio_len_sec=audio.shape[0]/sr, feat=feat, spf=spf)
 
 ```
 ## 3. Speech Segmentation and Syllable Detection on SpokenCOCO

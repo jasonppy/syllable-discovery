@@ -13,3 +13,4 @@ test*
 *.o
 build/
 debug.ipynb
+testing*
